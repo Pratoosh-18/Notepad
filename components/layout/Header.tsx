@@ -12,8 +12,8 @@ export default function Header() {
   }
 
   return (
-    <header>
-      <h1>Header</h1>
+    <header className="flex items-center justify-between shrink-0 h-14 px-4 border-b border-border bg-background">
+      <h1 className="font-semibold text-lg">Header</h1>
 
       <Button variant="outline" size="icon" onClick={toggleTheme}>
         <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
