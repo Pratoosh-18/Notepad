@@ -3,14 +3,16 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useNotes } from "@/components/notes/NotesContext";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function Sidebar() {
-  const { notes, selectedNoteId, setSelectedNoteId, createNote, updateNote } =
+  const { notes, selectedNoteId, setSelectedNoteId, createNote, updateNote, deleteNote } =
     useNotes();
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
+  const [noteToDeleteId, setNoteToDeleteId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -44,6 +46,18 @@ export default function Sidebar() {
     if (e.key === "Escape") {
       setEditingNoteId(null);
       setDraftTitle("");
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation();
+    setNoteToDeleteId(noteId);
+  };
+
+  const handleConfirmDelete = () => {
+    if (noteToDeleteId) {
+      deleteNote(noteToDeleteId);
+      setNoteToDeleteId(null);
     }
   };
 
@@ -113,6 +127,15 @@ export default function Sidebar() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="shrink-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => handleDeleteClick(e, note.id)}
+                      title="Delete note"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="shrink-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
                       onClick={(e) => startRename(e, note.id)}
                       title="Rename note"
@@ -126,6 +149,16 @@ export default function Sidebar() {
           })
         )}
       </nav>
+      <ConfirmDialog
+        open={noteToDeleteId !== null}
+        onOpenChange={(open) => !open && setNoteToDeleteId(null)}
+        title="Delete note?"
+        description="This note will be permanently deleted. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
     </aside>
   );
 }
