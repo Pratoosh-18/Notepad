@@ -3,13 +3,11 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNotes } from "./NotesContext";
 import { getNoteById } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 
 const SAVE_DEBOUNCE_MS = 400;
 
 export default function Notes() {
-  const { notes, selectedNoteId, updateNote, deleteNote } = useNotes();
+  const { notes, selectedNoteId, updateNote } = useNotes();
   const note = getNoteById(notes, selectedNoteId);
 
   const [title, setTitle] = useState("");
@@ -50,10 +48,6 @@ export default function Notes() {
     contentDebounceRef.current = setTimeout(() => persistContent(value), SAVE_DEBOUNCE_MS);
   };
 
-  const handleDelete = () => {
-    if (note && confirm("Delete this note?")) deleteNote(note.id);
-  };
-
   if (!note) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
@@ -69,18 +63,6 @@ export default function Notes() {
 
   return (
     <div className="flex flex-col w-full min-w-0 h-full">
-      <div className="shrink-0 w-full bg-muted p-3 rounded-md flex items-center justify-end gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={handleDelete}
-          title="Delete note"
-        >
-          <Trash2 className="h-4 w-4 mr-1" />
-          Delete
-        </Button>
-      </div>
       <article className="flex flex-col flex-1 min-h-0 w-full p-6 overflow-hidden">
         <header className="shrink-0 mb-4">
           <input
