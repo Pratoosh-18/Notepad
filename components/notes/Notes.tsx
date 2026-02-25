@@ -69,18 +69,13 @@ export default function Notes() {
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
             className="w-full text-2xl font-semibold tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 placeholder:text-muted-foreground"
-            placeholder="Untitled"
+            placeholder="Title..."
           />
-          <p className="text-sm text-muted-foreground mt-1">
-            {new Date(note.updatedAt).toLocaleDateString(undefined, {
-              dateStyle: "medium",
-            })}
-          </p>
         </header>
         <textarea
           value={content}
           onChange={(e) => handleContentChange(e.target.value)}
-          className="flex-1 min-h-0 w-full prose prose-sm dark:prose-invert max-w-none text-foreground bg-transparent border-none outline-none focus:ring-0 p-0 resize-none overflow-auto placeholder:text-muted-foreground"
+          className="flex-1 min-h-0 w-full prose prose-sm dark:prose-invert max-w-none text-foreground bg-transparent border-none outline-none focus:ring-0 p-0 resize-none overflow-auto placeholder:text-muted-foreground font-medium"
           placeholder="Start writing..."
           style={{ whiteSpace: "pre-wrap" }}
         />
