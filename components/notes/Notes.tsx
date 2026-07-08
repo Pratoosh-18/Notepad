@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { Search } from "lucide-react";
 import { useNotes } from "./NotesContext";
 import { getNoteById } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import HighlightedEditor from "./HighlightedEditor";
+import { FindReplaceBar, useFindReplace, useFindReplaceShortcut } from "./FindReplace";
 
 const SAVE_DEBOUNCE_MS = 400;
 
@@ -14,6 +18,10 @@ export default function Notes() {
   const [content, setContent] = useState("");
   const titleDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contentDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [findOpen, setFindOpen] = useState(false);
+  const [showReplace, setShowReplace] = useState(false);
+  const [initialFind, setInitialFind] = useState("");
 
   useEffect(() => {
     if (note) {
@@ -42,11 +50,43 @@ export default function Notes() {
     titleDebounceRef.current = setTimeout(() => persistTitle(value), SAVE_DEBOUNCE_MS);
   };
 
-  const handleContentChange = (value: string) => {
-    setContent(value);
-    if (contentDebounceRef.current) clearTimeout(contentDebounceRef.current);
-    contentDebounceRef.current = setTimeout(() => persistContent(value), SAVE_DEBOUNCE_MS);
-  };
+  const handleContentChange = useCallback(
+    (value: string, persistImmediately = false) => {
+      setContent(value);
+      if (contentDebounceRef.current) clearTimeout(contentDebounceRef.current);
+      if (persistImmediately) {
+        persistContent(value);
+        return;
+      }
+      contentDebounceRef.current = setTimeout(() => persistContent(value), SAVE_DEBOUNCE_MS);
+    },
+    [persistContent]
+  );
+
+  const openFindReplace = useCallback(
+    ({ showReplace: withReplace, initialFind: findValue }: { showReplace: boolean; initialFind?: string }) => {
+      setShowReplace(withReplace);
+      setInitialFind(findValue ?? "");
+      setFindOpen(true);
+    },
+    []
+  );
+
+  const closeFindReplace = useCallback(() => {
+    setFindOpen(false);
+    textareaRef.current?.focus();
+  }, []);
+
+  useFindReplaceShortcut(!!note, openFindReplace, textareaRef);
+
+  const findReplace = useFindReplace({
+    content,
+    onContentChange: (value) => handleContentChange(value, true),
+    textareaRef,
+    open: findOpen,
+    showReplace,
+    initialFind,
+  });
 
   if (!note) {
     return (
@@ -64,20 +104,39 @@ export default function Notes() {
   return (
     <div className="flex flex-col w-full min-w-0 h-full">
       <article className="flex flex-col flex-1 min-h-0 w-full p-6 overflow-hidden">
-        <header className="shrink-0 mb-4">
+        <header className="shrink-0 mb-4 flex items-start gap-2">
           <input
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className="w-full text-2xl font-semibold tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 placeholder:text-muted-foreground"
+            className="min-w-0 flex-1 text-2xl font-semibold tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 placeholder:text-muted-foreground"
             placeholder="Title..."
           />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => openFindReplace({ showReplace: false })}
+            title="Find (⌘F)"
+            className="shrink-0 text-muted-foreground"
+          >
+            <Search />
+          </Button>
         </header>
-        <textarea
-          value={content}
-          onChange={(e) => handleContentChange(e.target.value)}
-          className="flex-1 min-h-0 w-full prose prose-sm dark:prose-invert max-w-none text-foreground bg-transparent border-none outline-none focus:ring-0 p-0 resize-none overflow-auto placeholder:text-muted-foreground font-medium"
-          placeholder="Start writing..."
-          style={{ whiteSpace: "pre-wrap" }}
+
+        <FindReplaceBar
+          {...findReplace}
+          open={findOpen}
+          onClose={closeFindReplace}
+          onShowReplace={() => setShowReplace(true)}
+        />
+
+        <HighlightedEditor
+          content={content}
+          onChange={handleContentChange}
+          textareaRef={textareaRef}
+          findText={findOpen ? findReplace.findText : ""}
+          currentMatch={findReplace.currentMatch}
+          caseSensitive={findReplace.caseSensitive}
         />
       </article>
     </div>
